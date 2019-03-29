@@ -10,7 +10,7 @@ class RedisUtil(object):
         self.chat_list = 'chat_list'
 
         # 初始化Redis
-        self.client = redis.Redis()
+        self.client = redis.Redis(host='zzhost.top', port=6379, db=3)
 
     def is_nick_already_exists(self, nick):
         """

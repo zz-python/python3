@@ -21,9 +21,9 @@ def login():
     nick = request_data.get('nick', '')
     if not nick:
         return json.dumps({'success': False, 'reason': '昵称为空！'}, ensure_ascii=False)
-    if redis_util.is_nick_already_exists(nick):
-        return json.dumps({'success': False,
-                           'reason': '昵称：{nick}已经被人占用！'.format(nick=nick)}, ensure_ascii=False)
+    #if redis_util.is_nick_already_exists(nick):
+        #return json.dumps({'success': False,
+                           #'reason': '昵称：{nick}已经被人占用！'.format(nick=nick)}, ensure_ascii=False)
 
     token = nick + str(time.time())
     token_md5 = hashlib.md5(token.encode()).hexdigest()
@@ -86,7 +86,7 @@ def get_chat_list():
     return json.dumps(chat_list, ensure_ascii=False)
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host="0.0.0.0", port=5000)
 
 
 
