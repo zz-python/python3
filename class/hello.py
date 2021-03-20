@@ -2,7 +2,7 @@
 # coding=gbk 
 class MyClass:
     """一个简单的类实例"""
-    i = 12345
+    i = 123457
     def f(self):
         return 'hello world'
  
