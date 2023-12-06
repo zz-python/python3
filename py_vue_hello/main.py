@@ -10,6 +10,9 @@ static_url_path="")  #设置vue编译输出目录dist文件夹，为Flask模板�
 @app.route('/')
 def index():
     return render_template('index.html')
+@app.route('/test')
+def test():
+    return render_template('index.html')
     
  
 if __name__ == "__main__":
