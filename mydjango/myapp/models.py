@@ -1,6 +1,8 @@
 from django.db import models
 
-# Create your models here.
 class MyModel(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
+
+    def to_dict(self):
+            return {'name': self.name, 'description': self.description}
