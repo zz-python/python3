@@ -41,9 +41,9 @@ class YourApiView(APIView):
             }
         )
     )
-    # def post(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         # Your view logic here
-        # return Response(data={'message': 'Success'}, status=status.HTTP_200_OK)  
-    def get(self, request, *args, **kwargs):
+        return Response(data={'message': 'Success'}, status=status.HTTP_200_OK)  
+    # def get(self, request, *args, **kwargs):
         # Your view logic here
-        return Response(data={'message': 'Success'}, status=status.HTTP_200_OK)
+        # return Response(data={'message': 'Success'}, status=status.HTTP_200_OK)
