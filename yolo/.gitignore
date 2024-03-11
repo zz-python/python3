@@ -23,10 +23,8 @@ secret_key.txt
 # Virtual environment
 venv/
 ENV/
-openvino_env/
 yolo_env/
-pytorch_env/
-tmp/
+*.pt
 
 # IDE-specific files
 .vscode/
