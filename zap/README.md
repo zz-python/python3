@@ -8,3 +8,5 @@ python -m venv venv
 venv\Scripts\activate
 
 pip install python-owasp-zap-v2.14
+
+try fail
