@@ -5,8 +5,11 @@ import time
 from your_code_here.RedisUtil import RedisUtil
 from urllib.parse import quote, unquote
 from flask import Flask, render_template, request, redirect
+import os
 
-app = Flask(__name__)
+app = Flask(__name__, 
+            template_folder=os.path.join(os.path.abspath(os.path.dirname(__file__)), 'templates'),
+            static_folder=os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static'))
 redis_util = RedisUtil()
 
 
