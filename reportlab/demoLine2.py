@@ -1,32 +1,76 @@
 from reportlab.lib.pagesizes import letter
-from reportlab.lib import colors
-from reportlab.graphics.shapes import Drawing, Polygon
 from reportlab.pdfgen import canvas
+from reportlab.graphics.shapes import Drawing
+from reportlab.graphics.charts.lineplots import LinePlot
+from reportlab.lib import colors
+from reportlab.graphics.charts.axes import XValueAxis, YValueAxis
+from reportlab.graphics.charts.axes import XCategoryAxis
 
-pdf_file = "line_chart.pdf"
-c = canvas.Canvas(pdf_file, pagesize=letter)
+def draw_line_chart(pdf_canvas):
+    # 创建一个 Drawing 对象，用于绘制图形
+    drawing = Drawing(200, 200)
 
-# 创建一个 Drawing 对象，指定宽度和高度
-drawing = Drawing(400, 200)
+    # 数据：每个点表示一个 (x, y) 坐标对
+    data = [
+        (0, 0), (1, 3), (2, 5), (3, 6), (4, 4), (5, 7), (6, 9)
+    ]
+    x_labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G']  # X 轴的文本标签
 
-# 定义多边形的顶点坐标，注意这里是一个扁平的列表
-polygon_points = [0, 0, 250, 0, 250, 250, 150, 150, 50, 150, 0, 100]
+    # 创建一个折线图对象
+    line_plot = LinePlot()
+    line_plot.x = 0  # x 坐标
+    line_plot.y = 0  # y 坐标
+    line_plot.width = 400  # 图形宽度
+    line_plot.height = 150  # 图形高度
 
-gradient_fill = colors.Color(0, 0, 1)  # Blue
+    # 将数据设置为折线图的数据
+    line_plot.data = [data]  # 折线图只显示一个数据系列
+    line_plot.lines[0].strokeColor = colors.blue  # 设置线条颜色为蓝色
 
-# 创建多边形对象，使用关键字参数 points 传递顶点
-polygon = Polygon(
-    points=polygon_points,  # 使用扁平化的坐标列表
-    fillColor=gradient_fill,  # 填充颜色
-    strokeColor=colors.transparent,  # 边框颜色
-    strokeWidth=0,  # 边框宽度为2
-)
 
-# 将多边形添加到 Drawing 对象中
-drawing.add(polygon)
+    # 设置 X 轴和 Y 轴的标签
+    line_plot.xValueAxis = XValueAxis()
+    line_plot.yValueAxis = YValueAxis()
 
-# 使用 c.draw() 将 Drawing 渲染到 PDF 页面上
-drawing.drawOn(c, 50, 400)  # 在 (50, 400) 位置绘制图形
+    # 设置 Y 轴范围
+    line_plot.yValueAxis.valueMin = 0
+    line_plot.yValueAxis.valueMax = 20
+    line_plot.yValueAxis.valueStep = 5
 
-# 保存 PDF 文件
-c.save()
+    # 设置 X 轴的文本标签
+    line_plot.xValueAxis.categoryNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
+
+    # 修改 X 轴标签的字体颜色
+    line_plot.xValueAxis.labels.fontSize = 10
+    line_plot.xValueAxis.labels.fillColor = colors.Color(0, 0, 0, alpha=0.5)
+    # 修改 Y 轴标签的字体颜色
+    line_plot.yValueAxis.labels.fontSize = 10
+    line_plot.yValueAxis.labels.fillColor = colors.Color(0, 0, 0, alpha=0.5)
+
+    #line_plot.xValueAxis.visibleLabels = False  # 隐藏 X 轴标签
+    #line_plot.yValueAxis.visibleLabels = False  # 隐藏 Y 轴标签
+    line_plot.xValueAxis.visibleTicks = False   # 隐藏 X 轴刻度
+    line_plot.yValueAxis.visibleTicks = False   # 隐藏 Y 轴刻度
+     # 隐藏 X 和 Y 轴的线条，但保留文字
+    line_plot.xValueAxis.strokeColor = colors.Color(0, 0, 0, alpha=0.1)  # X 轴的线条
+    line_plot.yValueAxis.strokeColor = colors.transparent     # 隐藏 Y 轴的线条
+
+    line_plot.yValueAxis.visibleGrid = True
+    line_plot.yValueAxis.gridStrokeColor = colors.Color(0, 0, 0, alpha=0.1)  # 网格线颜色
+    line_plot.yValueAxis.gridStrokeWidth = 0.5  # 网格线宽度
+    line_plot.yValueAxis.gridStrokeDashArray = [2, 2]  # 网格线样式
+
+    # 将折线图添加到 Drawing 对象中
+    drawing.add(line_plot)
+
+    # 使用 c.draw() 将 Drawing 渲染到 PDF 页面上
+    drawing.drawOn(pdf_canvas, 50, 400)  # 在 (50, 400) 位置绘制图形
+
+def create_pdf():
+    c = canvas.Canvas("line_chart.pdf", pagesize=letter)
+    draw_line_chart(c)  # 绘制横向条形图
+    c.save()  # 保存PDF
+    print(f"PDF 文件已生成！")
+
+create_pdf()
+

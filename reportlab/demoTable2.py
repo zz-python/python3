@@ -4,7 +4,7 @@ from reportlab.lib import colors
 from reportlab.pdfgen import canvas
 
 # 创建PDF文件
-def create_pdf_with_bar_chart(output_pdf):
+def create_table_img(output_pdf):
     c = canvas.Canvas(output_pdf, pagesize=letter)
 
     # 表格数据
@@ -65,4 +65,4 @@ def create_pdf_with_bar_chart(output_pdf):
     c.save()
 
 # 生成PDF
-create_pdf_with_bar_chart("table_example.pdf")
+create_table_img("table_example.pdf")

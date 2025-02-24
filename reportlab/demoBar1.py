@@ -43,7 +43,8 @@ def create_pdf_with_bar_chart(output_pdf):
 
 
     # 隐藏 X 和 Y 轴的线条，但保留文字
-    bar_chart.categoryAxis.strokeColor = colors.transparent  # 隐藏 X 轴的线条
+    bar_chart.categoryAxis.visibleTicks = False   # 隐藏 X 轴刻度
+    bar_chart.categoryAxis.strokeColor = colors.HexColor('#D5D5D5')  # 隐藏 X 轴的线条
     bar_chart.valueAxis.strokeColor = colors.transparent     # 隐藏 Y 轴的线条
 
     # 修改 X 轴字体颜色
@@ -64,6 +65,7 @@ def create_pdf_with_bar_chart(output_pdf):
     bar_chart.valueAxis.visibleGrid = True
     bar_chart.valueAxis.gridStrokeColor = colors.Color(0, 0, 0, alpha=0.1)  # 网格线颜色
     bar_chart.valueAxis.gridStrokeWidth = 0.5  # 网格线宽度
+    bar_chart.valueAxis.gridStrokeDashArray = [2, 2]  # 网格线样式
     # 将柱状图添加到Drawing对象中
     d.add(bar_chart)
 
