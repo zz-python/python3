@@ -32,6 +32,11 @@ def draw_line_chart(pdf_canvas):
     line_plot.xValueAxis = XValueAxis()
     line_plot.yValueAxis = YValueAxis()
 
+    def format_date(value):
+        return f"time{value}"  # 格式化日期
+
+    line_plot.xValueAxis.labelTextFormat = format_date
+
     # 设置 Y 轴范围
     line_plot.yValueAxis.valueMin = 0
     line_plot.yValueAxis.valueMax = 20
