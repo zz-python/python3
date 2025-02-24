@@ -38,7 +38,7 @@ def draw_line_chart(pdf_canvas):
     line_plot.yValueAxis.valueStep = 5
 
     # 设置 X 轴的文本标签
-    line_plot.xValueAxis.categoryNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
+    #line_plot.xValueAxis.categoryNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
 
     # 修改 X 轴标签的字体颜色
     line_plot.xValueAxis.labels.fontSize = 10
