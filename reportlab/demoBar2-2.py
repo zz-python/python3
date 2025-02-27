@@ -1,11 +1,13 @@
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas
+from reportlab.platypus import Paragraph
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 def draw_horizontal_bar_chart(pdf_canvas):
     # 数据
     labels = ["0.0.0.10", "0.0.0.8", "0.0.0.7", "::1234", "0.0.0.240"]
-    values = [35, 30, 25, 20, 15]  # 数据值，用于决定条形图的长度
+    values = [135, 30, 25, 12, 5]  # 数据值，用于决定条形图的长度
     
     # 设置坐标和条形图的基本配置
     x_start = 50
@@ -30,6 +32,18 @@ def draw_horizontal_bar_chart(pdf_canvas):
         pdf_canvas.setFillColor(colors.black)  # 设置文本颜色为黑色
         pdf_canvas.drawString(x_start, y_start - (bar_height + bar_spacing) * i + 15, labels[i])  # 标签的位置
 
+        # 添加数值
+        styles = getSampleStyleSheet()
+        print(styles['BodyText'])
+        # 创建段落对象
+        text_style = ParagraphStyle(
+                name='TextStyle',
+                parent=styles['BodyText']
+            )
+        paragraph = Paragraph(str(values[i]), text_style)
+        paragraph.wrapOn(pdf_canvas, 400, 600)  # wrapOn 用于计算文本的实际尺寸 self.c.stringWidth(text) fontsize=12
+        paragraph.drawOn(pdf_canvas, x_start+370, y_start - (bar_height + bar_spacing) * i)  # drawOn 用于将段落绘制到 Canvas 上
+
     # 绘制标题
     pdf_canvas.drawString(50, y_start + 50, "Top5")
 
@@ -43,7 +57,7 @@ def draw_horizontal_bar_chart(pdf_canvas):
     #     pdf_canvas.drawString(tick_position - 10, y_start - (bar_height + bar_spacing) * (len(values) + 5), str(int(i * (max_value / num_ticks))))  # 刻度值
 
 def create_pdf():
-    c = canvas.Canvas("horizontal_bar_chart_example.pdf", pagesize=letter)
+    c = canvas.Canvas("test.pdf", pagesize=letter)
     draw_horizontal_bar_chart(c)  # 绘制横向条形图
     c.save()  # 保存PDF
 

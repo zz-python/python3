@@ -76,4 +76,4 @@ def create_pdf_with_bar_chart(output_pdf):
     c.save()
 
 # 生成PDF
-create_pdf_with_bar_chart("bar_chart_example.pdf")
+create_pdf_with_bar_chart("test.pdf")
