@@ -1,6 +1,6 @@
 from reportlab.lib.pagesizes import A4, letter
 from reportlab.pdfgen import canvas
-from reportlab.graphics.shapes import Drawing, Rect
+from reportlab.graphics.shapes import Drawing, Rect, String
 from reportlab.graphics.charts.lineplots import LinePlot
 from reportlab.lib import colors
 
@@ -11,9 +11,25 @@ print(f"A4={A4},letter={letter}")
 # 创建一个 Drawing 对象，用于绘制图形
 drawing = Drawing(500, 200)
 
+# 添加第一行文字
+text1 = String(100, 150, "Hello, ReportLab!")
+text1.fontName = "Helvetica"
+text1.fontSize = 20
+text1.fillColor = colors.HexColor("#3498db")
+drawing.add(text1)
+
+# 添加第二行文字
+text2 = String(100, 120, "This is a drawing with text.")
+text2.fontName = "Times-Roman"
+text2.fontSize = 14
+text2.fillColor = colors.HexColor("#2ecc71")
+drawing.add(text2)
+
+drawing.add(text1)
+
 # 创建矩形 (Rect)
 # 参数：x, y, width, height, strokeWidth, strokeColor, fillColor
-rect = Rect(20, 0, 500, 200, strokeWidth=1, strokeColor=(0, 0, 0), fillColor=None)
+rect = Rect(30, 0, 500, 200,rx=10, ry=10, strokeWidth=1, strokeColor=colors.HexColor("#ecf0f1"), fillColor=None)
 
 # 将矩形添加到绘图对象
 drawing.add(rect)
@@ -41,14 +57,14 @@ drawing.add(line_plot)
 drawing.drawOn(c, 0, 400)  # 在 (50, 400) 位置绘制图形
 
 
-x = 0  # 矩形左上角的 x 坐标
-y = 300  # 矩形左上角的 y 坐标
-width = 500  # 矩形的宽度
-height = 200  # 矩形的高度
-rx = 10  # 圆角的 x 半径
-#ry = 20  # 圆角的 y 半径
-c.setStrokeColor(colors.HexColor("#ecf0f1"))  # 设置边框宽度
-c.roundRect(x, y, width, height, rx, stroke=1, fill=0)
+# x = 0  # 矩形左上角的 x 坐标
+# y = 300  # 矩形左上角的 y 坐标
+# width = 500  # 矩形的宽度
+# height = 200  # 矩形的高度
+# rx = 10  # 圆角的 x 半径
+# #ry = 20  # 圆角的 y 半径
+# c.setStrokeColor(colors.HexColor("#ecf0f1"))  # 设置边框宽度
+# c.roundRect(x, y, width, height, rx, stroke=1, fill=0)
 
 # 保存 PDF 文件
 c.save()
