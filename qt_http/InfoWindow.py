@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QRadioButton, QTextBrowser, QMessageBox
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QRadioButton, QTextBrowser, QMessageBox, QFormLayout, QHBoxLayout
 from PyQt5.QtCore import QThread, pyqtSignal, Qt
 import requests
 import time
@@ -13,42 +13,95 @@ class InfoWindow(QWidget):
         self.resize(1600, 900)  
 
         # 设置布局
-        layout = QVBoxLayout()
+        main_layout = QVBoxLayout()
 
-        self.testDbButton = QPushButton("测试连接", self)
-        layout.addWidget(self.testDbButton)
+        # 创建表单布局
+        formLayout = QFormLayout()
+        formRow1Layout = QHBoxLayout()
+        formRow2Layout = QHBoxLayout()
+        formRow3Layout = QHBoxLayout()
+        formLayout.addRow(formRow1Layout)
+        formLayout.addRow(formRow2Layout)
+        formLayout.addRow(formRow3Layout)
+        main_layout.addLayout(formLayout)
+
+        self.timesLabel = QLabel("测试次数:")
+        self.timesEdit = QLineEdit("10")
+        formRow1Layout.addWidget(self.timesLabel)
+        formRow1Layout.addWidget(self.timesEdit)
+
+        self.url1Label = QLabel("测试url1:")
+        self.url1Edit = QLineEdit("http://101.35.20.226/demo/query/test")
+        formRow2Layout.addWidget(self.url1Label)
+        formRow2Layout.addWidget(self.url1Edit)
+
+
+        self.testDbButton = QPushButton("开始测试", self)
+        main_layout.addWidget(self.testDbButton)
         self.textLog = QTextBrowser()
-        layout.addWidget(self.textLog)
-        self.setLayout(layout)
+        main_layout.addWidget(self.textLog)
+        self.setLayout(main_layout)
         self.testDbButton.clicked.connect(self.testDb)
-
-    def update_text_browser(self, text, clear_last_line):
-        # 在主线程中更新 QTextBrowser
-        self.textLog.append(text)
 
     def testDb(self):
         # url = "http://101.35.20.226/demo/query/test"
         # self.textLog.append(f"测试请求url={url}")
         # self.testHttpN(url)
+        urls = [self.url1Edit.text()]
 
-        self.worker = Worker()
+        self.worker = Worker(urls)
         self.worker.update_signal.connect(self.update_text_browser)
         # 启动线程
         self.worker.start()
 
-    def testHttpN(self, url): 
-        for i in range(100):
-            print(i)
-            self.textLog.append(f"第{i}次请求")
-            self.testHttp(url)
+    def update_text_browser(self, text, clear_last_line):
+        # 在主线程中更新 QTextBrowser
+        if clear_last_line:
+            
+            self.clear_last_line()
+        self.textLog.append(text)
 
+    def clear_last_line(self):
+        text = self.textLog.toPlainText()  # 获取全部文本
+        print(f"text={text}")
+        lines = text.splitlines()              # 分割成行列表
+        if lines:                              # 如果有内容
+            lines = lines[:-1]                 # 删除最后一行
+            self.textLog.setText('\n'.join(lines))  # 重新设置文本
+
+
+class Worker(QThread):
+    # 定义一个信号，用于传递文本到主线程
+    update_signal = pyqtSignal(str, bool)
+
+    def __init__(self, urls=None, times=10):
+        super().__init__()
+        self.urls = urls
+        self.times = times
+    
+    def run(self):
+        for url in self.urls:
+            self.update_signal.emit(f"{url},开始测试", False)
+            elapsed_time_count = []
+            for i in range(self.times):
+                elapsed_time = round(self.testHttp(url) * 1000)
+                self.update_signal.emit(f"{url},第{i+1}次测试，用时{elapsed_time}毫秒", False if i==0 else True)
+                elapsed_time_count.append(elapsed_time)
+            max_value = max(elapsed_time_count)
+            min_value = min(elapsed_time_count)
+            avg_value = sum(elapsed_time_count) / len(elapsed_time_count)
+            self.update_signal.emit(f"{url},测试完成，最大值={max_value}，最小值={min_value}，平均值={avg_value}", False)
+            
+        # 模拟耗时操作，逐步发送文本
+        # for i in range(1, 11):
+        #     self.update_signal.emit(f"Step {i}/10: Task in progress...\n", True)
+        #     self.msleep(1000)  # 每秒更新一次
         
+        # self.update_signal.emit("Task Completed!", True)  # 最后显示完成信息
 
     def testHttp(self, url):
-        
         # 目标 URL
         #url = "http://example.com"
-
 
         start_time = time.time()
         # 发送 GET 请求
@@ -67,25 +120,3 @@ class InfoWindow(QWidget):
             print(f"请求失败，状态码: {response.status_code}")
 
         return elapsed_time
-
-    def clear_last_line(self):
-        # 获取 QTextCursor
-        cursor = self.textLog.textCursor()
-        # 定位到文本的末尾
-        cursor.movePosition(cursor.End)
-        # 向上移动一行，定位到最后一行的起始位置
-        cursor.movePosition(cursor.Up)
-        # 删除这行内容
-        cursor.removeSelectedText()
-
-class Worker(QThread):
-    # 定义一个信号，用于传递文本到主线程
-    update_signal = pyqtSignal(str, bool)
-    
-    def run(self):
-        # 模拟耗时操作，逐步发送文本
-        for i in range(1, 11):
-            self.update_signal.emit(f"Step {i}/10: Task in progress...\n", True)
-            self.msleep(1000)  # 每秒更新一次
-        
-        self.update_signal.emit("Task Completed!", True)  # 最后显示完成信息
