@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton
 from PyQt5.QtCore import QThread, pyqtSignal, Qt
 import requests
 import time
+import uuid
 
 class InfoWindow(QWidget):
     def __init__(self):
@@ -30,10 +31,13 @@ class InfoWindow(QWidget):
         formRow1Layout.addWidget(self.timesLabel)
         formRow1Layout.addWidget(self.timesEdit)
 
-        self.url1Label = QLabel("测试url1:")
-        self.url1Edit = QLineEdit("http://101.35.20.226/demo/query/test")
+        self.url1Label = QLabel("测试url:")
+        self.url1Edit = QLineEdit("http://101.35.20.226/demo/query/test?param=${random}")
         formRow2Layout.addWidget(self.url1Label)
         formRow2Layout.addWidget(self.url1Edit)
+
+        self.remarkLabel = QLabel("url中${random}将替换乘随机数")
+        formRow3Layout.addWidget(self.remarkLabel)
 
 
         self.testDbButton = QPushButton("开始测试", self)
@@ -48,8 +52,8 @@ class InfoWindow(QWidget):
         # self.textLog.append(f"测试请求url={url}")
         # self.testHttpN(url)
         urls = [self.url1Edit.text()]
-
-        self.worker = Worker(urls)
+        times = int(self.timesEdit.text())
+        self.worker = Worker(urls, times)
         self.worker.update_signal.connect(self.update_text_browser)
         # 启动线程
         self.worker.start()
@@ -57,7 +61,6 @@ class InfoWindow(QWidget):
     def update_text_browser(self, text, clear_last_line):
         # 在主线程中更新 QTextBrowser
         if clear_last_line:
-            
             self.clear_last_line()
         self.textLog.append(text)
 
@@ -84,20 +87,19 @@ class Worker(QThread):
             self.update_signal.emit(f"{url},开始测试", False)
             elapsed_time_count = []
             for i in range(self.times):
-                elapsed_time = round(self.testHttp(url) * 1000)
-                self.update_signal.emit(f"{url},第{i+1}次测试，用时{elapsed_time}毫秒", False if i==0 else True)
+                if "${random}" in url:
+                    random_uuid = uuid.uuid4()
+                    print(f"random_uuid={random_uuid}")
+                    url_format = url.replace("${random}", str(random_uuid))
+                else:
+                    url_format = url
+                elapsed_time = round(self.testHttp(url_format) * 1000)
+                self.update_signal.emit(f"{url_format},第{i+1}次测试，用时{elapsed_time}毫秒", False if i==0 else True)
                 elapsed_time_count.append(elapsed_time)
             max_value = max(elapsed_time_count)
             min_value = min(elapsed_time_count)
             avg_value = sum(elapsed_time_count) / len(elapsed_time_count)
             self.update_signal.emit(f"{url},测试完成，最大值={max_value}，最小值={min_value}，平均值={avg_value}", False)
-            
-        # 模拟耗时操作，逐步发送文本
-        # for i in range(1, 11):
-        #     self.update_signal.emit(f"Step {i}/10: Task in progress...\n", True)
-        #     self.msleep(1000)  # 每秒更新一次
-        
-        # self.update_signal.emit("Task Completed!", True)  # 最后显示完成信息
 
     def testHttp(self, url):
         # 目标 URL
