@@ -32,20 +32,27 @@ class InfoWindow(QWidget):
         formRow1Layout.addWidget(self.timesEdit)
 
         self.url1Label = QLabel("测试url:")
-        self.url1Edit = QLineEdit("http://101.35.20.226/demo/query/test?param=${random}")
+        self.url1Edit = QLineEdit("http://zsite.asia/demo/test?param=${random}")
         formRow2Layout.addWidget(self.url1Label)
         formRow2Layout.addWidget(self.url1Edit)
 
-        self.remarkLabel = QLabel("url中${random}将替换乘随机数")
+        self.remarkLabel = QLabel("url中${random}将替换成随机数")
         formRow3Layout.addWidget(self.remarkLabel)
 
 
-        self.testDbButton = QPushButton("开始测试", self)
-        main_layout.addWidget(self.testDbButton)
+        self.testDbButton = QPushButton("开始测试")
+        self.clearButton = QPushButton("清空日志")
+        self.buttonLayout = QHBoxLayout()
+        self.buttonLayout.addWidget(self.testDbButton)
+        self.buttonLayout.addWidget(self.clearButton)
+        main_layout.addLayout(self.buttonLayout)
+
         self.textLog = QTextBrowser()
         main_layout.addWidget(self.textLog)
         self.setLayout(main_layout)
+
         self.testDbButton.clicked.connect(self.testDb)
+        self.clearButton.clicked.connect(self.clear)
 
     def testDb(self):
         # url = "http://101.35.20.226/demo/query/test"
@@ -57,6 +64,9 @@ class InfoWindow(QWidget):
         self.worker.update_signal.connect(self.update_text_browser)
         # 启动线程
         self.worker.start()
+    
+    def clear(self):
+        self.textLog.clear()
 
     def update_text_browser(self, text, clear_last_line):
         # 在主线程中更新 QTextBrowser
@@ -93,8 +103,9 @@ class Worker(QThread):
                     url_format = url.replace("${random}", str(random_uuid))
                 else:
                     url_format = url
-                elapsed_time = round(self.testHttp(url_format) * 1000)
-                self.update_signal.emit(f"{url_format},第{i+1}次测试，用时{elapsed_time}毫秒", False if i==0 else True)
+                time, content = self.testHttp(url_format)
+                elapsed_time = round(time * 1000)
+                self.update_signal.emit(f"{url_format},第{i+1}次测试，用时{elapsed_time}毫秒，响应{content}", False if i==0 else True)
                 elapsed_time_count.append(elapsed_time)
             max_value = max(elapsed_time_count)
             min_value = min(elapsed_time_count)
@@ -102,24 +113,28 @@ class Worker(QThread):
             self.update_signal.emit(f"{url},测试完成，最大值={max_value}，最小值={min_value}，平均值={avg_value}", False)
 
     def testHttp(self, url):
-        # 目标 URL
-        #url = "http://example.com"
+        try:
+            start_time = time.time()
+            # 发送 GET 请求
+            response = requests.get(url)
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+            print(f"GET 请求用时: {elapsed_time:.4f} 秒")
+            print(f"GET 请求用时: {elapsed_time*1000}毫秒")
 
-        start_time = time.time()
-        # 发送 GET 请求
-        response = requests.get(url)
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        print(f"GET 请求用时: {elapsed_time:.4f} 秒")
-        print(f"GET 请求用时: {elapsed_time*1000}毫秒")
+            # 检查请求是否成功
+            if response.status_code == 200:
+                # 获取页面内容
+                page_content = response.text
+                print(page_content)
+            else:
+                print(f"请求失败，状态码: {response.status_code}")
+                elapsed_time = -1
 
-        # 检查请求是否成功
-        if response.status_code == 200:
-            # 获取页面内容
-            page_content = response.text
-            print(page_content)
-        else:
-            print(f"请求失败，状态码: {response.status_code}")
+        except Exception as e:
+            # 捕获请求异常
+            print(f"请求异常：{e}")
             elapsed_time = -1
+            page_content = e
 
-        return elapsed_time
+        return elapsed_time, page_content
