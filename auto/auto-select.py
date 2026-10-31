@@ -1,6 +1,6 @@
 """挂机脚本
 
-F11 = 开启  F12 = 退出程序
+F11 = 开启  F12 = 停止（F11 可再次开启）
 
 循环流程：
     按 Tab → 截图 + 打印截图日志 → OCR 识别百分比“xx%”
@@ -23,32 +23,33 @@ class AutoPresser:
         self._running = False
         self._lock = threading.Lock()
         self._thread = None
+        self._token = 0
 
-    def _is_running(self):
+    def _is_running(self, token):
         with self._lock:
-            return self._running
+            return self._running and self._token == token
 
-    def _loop(self):
+    def _loop(self, token):
         kb = keyboard.Controller()
         ms = mouse.Controller()
 
         round_no = 0
-        while self._is_running():
+        while self._is_running(token):
             # 仅当当前活跃窗口标题包含“伊莫”时才执行循环
             if picture.WINDOW_TITLE not in picture.active_window_title():
                 time.sleep(INTERVAL)
                 continue
             round_no += 1
-            if round_no > 300:
+            if round_no > 30000:
                 print("[已停止] 达到 300 轮")
                 break
             print(f"[第{round_no}轮]")
             # 1. 按下 Tab
-            kb.press(keyboard.Key.tab)
-            time.sleep(0.1)
-            kb.release(keyboard.Key.tab)
-            print("[按下Tab]")
-            time.sleep(0.5)
+            # kb.press(keyboard.Key.tab)
+            # time.sleep(0.1)
+            # kb.release(keyboard.Key.tab)
+            # print("[按下Tab]")
+            # time.sleep(0.5)
             ms.click(mouse.Button.left)
             time.sleep(0.4)
             print("按下鼠标左键")
@@ -77,8 +78,10 @@ class AutoPresser:
             if self._running:
                 return
             self._running = True
+            self._token += 1
+            token = self._token
 
-        self._thread = threading.Thread(target=self._loop, daemon=True)
+        self._thread = threading.Thread(target=self._loop, args=(token,), daemon=True)
         self._thread.start()
         print(f"[已开启] 循环：Tab → 截图 → 识别百分比>{PERCENT_THRESHOLD}% 按左键")
 
@@ -86,8 +89,9 @@ class AutoPresser:
         with self._lock:
             was_running = self._running
             self._running = False
+            self._token += 1
         if was_running:
-            print("[已关闭]")
+            print("[已停止]")
 
 
 def auto():
@@ -98,12 +102,11 @@ def auto():
             presser.start()
         elif key == keyboard.Key.f12:
             presser.stop()
-            print("[退出程序]")
-            return False  # 停止监听器，结束程序
 
     print("挂机脚本已就绪：")
     print("  F11 = 开启")
-    print("  F12 = 退出程序")
+    print("  F12 = 停止")
+    print("  F11 可再次开启")
     try:
         with keyboard.Listener(on_press=on_press) as listener:
             listener.join()
