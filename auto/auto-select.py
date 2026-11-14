@@ -50,9 +50,28 @@ class AutoPresser:
             # kb.release(keyboard.Key.tab)
             # print("[按下Tab]")
             # time.sleep(0.5)
-            ms.click(mouse.Button.left)
-            time.sleep(0.4)
-            print("按下鼠标左键")
+            # 按下鼠标左键
+            # ms.click(mouse.Button.left)
+            # print("按下鼠标左键")
+            # time.sleep(0.4)
+            # 按下F键
+            if round_no % 40 == 0:
+                kb.press('e')
+                kb.release('e')
+                print("[按下e]")
+                time.sleep(0.2)
+                kb.press('r')
+                kb.release('r')
+                print("[按下r]")
+                time.sleep(0.2)
+            if round_no % 50 == 0:
+                ms.click(mouse.Button.left)
+                print("按下鼠标左键")
+                time.sleep(0.2)
+            kb.press('f')
+            kb.release('f')
+            print("[按下f]")
+            time.sleep(0.2)
 
             # # 2. 截图 + 打印截图日志
             # print("[按下Tab] 正在截图并判断…")
@@ -102,6 +121,8 @@ def auto():
             presser.start()
         elif key == keyboard.Key.f12:
             presser.stop()
+        elif key == keyboard.Key.f10:
+            exit()
 
     print("挂机脚本已就绪：")
     print("  F11 = 开启")
