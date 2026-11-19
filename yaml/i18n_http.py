@@ -17,7 +17,6 @@ import requests
 
 
 BASE_URL = "http://csbu.ruijie.com.cn/glossary-api/api/v1/glossary/entries"
-PRODUCT_ID = 6
 
 HEADERS_TEMPLATE = {
     "Accept": "application/json, text/plain, */*",
@@ -35,13 +34,14 @@ def build_payload(
     entry_key: str,
     zh_content: str,
     *,
+    product_id: int = 6,
     is_urgent: bool = False,
     expected_translate_at: str = "",
     need_ml_translation: bool = True,
     no_translation: bool = False,
 ) -> dict:
     return {
-        "product_id": PRODUCT_ID,
+        "product_id": product_id,
         "module_key": module_key,
         "zh_content": zh_content,
         "is_urgent": is_urgent,
@@ -58,12 +58,13 @@ def post_entry(
     entry_key: str,
     zh_content: str,
     *,
+    product_id: int = 6,
     verify: bool = False,
     **payload_overrides,
 ) -> requests.Response:
     """Submit a glossary entry. Set verify=True to enable SSL verification."""
     headers = {**HEADERS_TEMPLATE, "Authorization": f"Bearer {token}"}
-    payload = build_payload(module_key, entry_key, zh_content, **payload_overrides)
+    payload = build_payload(module_key, entry_key, zh_content, product_id=product_id, **payload_overrides)
 
     resp = requests.post(BASE_URL, headers=headers, json=payload, verify=verify)
     resp.encoding = "utf-8"
