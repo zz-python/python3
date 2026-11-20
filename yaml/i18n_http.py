@@ -17,6 +17,7 @@ import requests
 
 
 BASE_URL = "http://csbu.ruijie.com.cn/glossary-api/api/v1/glossary/entries"
+REVIEW_URL = "http://csbu.ruijie.com.cn/glossary-api/api/v1/glossary/review/en"
 
 HEADERS_TEMPLATE = {
     "Accept": "application/json, text/plain, */*",
@@ -71,7 +72,42 @@ def post_entry(
     return resp
 
 
-def main():
+def get_entry(
+    token: str,
+    keyword: str,
+    *,
+    module_key: str = "",
+    product: str = "",
+    page: int = 1,
+    page_size: int = 20,
+    sort_by: str = "",
+    sort_order: str = "",
+    pipeline_status: str = "",
+    created_by: str = "",
+    is_urgent: str = "",
+    verify: bool = False,
+) -> requests.Response:
+    """Query glossary review entries by keyword. Set verify=True to enable SSL verification."""
+    headers = {**HEADERS_TEMPLATE, "Authorization": f"Bearer {token}"}
+    params = {
+        "page": page,
+        "pageSize": page_size,
+        "sort_by": sort_by,
+        "sort_order": sort_order,
+        "keyword": keyword,
+        "product": product,
+        "module_key": module_key,
+        "pipeline_status": pipeline_status,
+        "created_by": created_by,
+        "is_urgent": is_urgent,
+    }
+
+    resp = requests.get(REVIEW_URL, headers=headers, params=params, verify=verify)
+    resp.encoding = "utf-8"
+    return resp
+
+
+def test_post_entry():
     token = "xxxx"
     module_key = "secAlert"
     entry_key = "secAlert.test"
@@ -85,5 +121,30 @@ def main():
         print(resp.text)
 
 
+def test_get_entry():
+    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3OTUyNzc3NTEsImlhdCI6MTc5NTE2MjU1MSwiaWQiOjIyOH0.8DM6ozpLSz8ySzxlaElJdQIEwbefawWWPU39n91ywrs"
+    keyword = "assetManager.asset.type.firewall"
+    product = "安全云后端"
+    module_key = "assetMgmt"
+
+    resp = get_entry(token, keyword, product=product, module_key=module_key, page=1, page_size=20)
+    print(f"Status: {resp.status_code}")
+    try:
+        data = resp.json()
+        print(json.dumps(data, ensure_ascii=False, indent=2))
+        # 提取 en_lang.content
+        items = data.get("data", {}).get("list", [])
+        for item in items:
+            en_content = item.get("en_lang", {}).get("content", "")
+            entry_key = item.get("entry_key", "")
+            zh_content = item.get("zh_content", "")
+            print(f"\n--- en_lang content ---")
+            print(f"entry_key: {entry_key}")
+            print(f"zh_content: {zh_content}")
+            print(f"en_content: {en_content}")
+    except ValueError:
+        print(resp.text)
+
+
 if __name__ == "__main__":
-    main()
+    test_get_entry()
