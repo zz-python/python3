@@ -59,42 +59,66 @@ def extract_key_values(file_path: str, prefix: str) -> dict[str, str]:
 
 
 def check_key_values(file_path: str, prefix: str, input_map: dict[str, str]) -> dict:
-    """
-    Compare the given input_map against the .properties file.
-    Returns a dict with:
-        matched   — key 和 value 完全一致
-        mismatched — key 存在但 value 不同
-        extra     — 	input_map 中有但文件中没有的 key
-        missing   — 文件中有但 input_map 中缺少的 key
-    """
-    file_map = extract_key_values(file_path, prefix)
+    pass
 
-    matched: dict[str, str] = {}
-    mismatched: dict[str, dict] = {}
-    extra: dict[str, str] = {}
-    missing: dict[str, str] = {}
 
-    # check input_map against file
-    for key, val in input_map.items():
-        if key in file_map:
-            if val == file_map[key]:
-                matched[key] = val
-            else:
-                mismatched[key] = {"expected": file_map[key], "got": val}
+def write_key_values(file_path: str, updates: dict[str, str], prefix: str):
+    """
+    Update values in a .properties file by walking lines — only lines
+    whose key starts with *prefix* and in *updates* are touched.
+    """
+    if not updates:
+        print("No changes to write.")
+        return
+
+    with open(file_path, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+
+    new_lines: list[str] = []
+    updated = 0
+
+    for line in lines:
+        raw = line.rstrip('\n\r')
+        stripped = raw.strip()
+
+        # blank / comment / no separator — keep as-is
+        if not stripped or stripped.startswith('#') or stripped.startswith('!'):
+            new_lines.append(line)
+            continue
+
+        sep_pos = -1
+        for i, ch in enumerate(stripped):
+            if ch in ('=', ':'):
+                sep_pos = i
+                break
+
+        if sep_pos == -1:
+            new_lines.append(line)
+            continue
+
+        key = stripped[:sep_pos].rstrip()
+        sep_char = stripped[sep_pos]
+        old_value = stripped[sep_pos + 1:].lstrip()
+
+        if key in updates and key.startswith(prefix):
+            new_value = updates[key]
+            # preserve leading whitespace
+            leading = line[:len(line) - len(line.lstrip())]
+            new_lines.append(f'{leading}{key}{sep_char} {new_value}\n')
+            print(f"[UPD ] {key}: {old_value!r} -> {new_value!r}")
+            updated += 1
         else:
-            extra[key] = val
+            new_lines.append(line)
 
-    # check file keys not in input_map
-    for key, val in file_map.items():
-        if key not in input_map:
-            missing[key] = val
+    if updated == 0:
+        print("No changes to write.")
+        return
 
-    return {
-        "matched": matched,
-        "mismatched": mismatched,
-        "extra": extra,
-        "missing": missing,
-    }
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.writelines(new_lines)
+
+    print(f"Wrote {updated} update(s) to {file_path}")
+    
 
 
 def test_extract_key_values(properties_path: str, prefix: str):
@@ -103,30 +127,5 @@ def test_extract_key_values(properties_path: str, prefix: str):
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 
-def test_check_key_values():
-    props_path = "E:/projects/security-operations/platform/soc-common/soc-common-i18n/src/main/resources/messages.properties"
-    prefix = "assetManager"
-
-    # 构造一个测试 map：故意有匹配、不匹配、多余、缺少
-    test_map = {
-        "assetManager.module": "资产管理",          # matched
-        "assetManager.asset.type.PC": "错误的值",                     # mismatched
-        "assetManager.not.exist.key": "不存在的key",                              # extra
-        # "assetManager.assetGroup.defaultName" 故意不传，验证 missing
-    }
-
-    result = check_key_values(props_path, prefix, test_map)
-
-    print("=== matched ===")
-    print(json.dumps(result["matched"], ensure_ascii=False, indent=2))
-    print("\n=== mismatched ===")
-    print(json.dumps(result["mismatched"], ensure_ascii=False, indent=2))
-    print("\n=== extra ===")
-    print(json.dumps(result["extra"], ensure_ascii=False, indent=2))
-    print(f"\n=== missing ({len(result['missing'])} keys) ===")
-    print(json.dumps(result["missing"], ensure_ascii=False, indent=2))
-
-
 if __name__ == '__main__':
-    # test_check_key_values()
-    test_check_key_values()
+    test_extract_key_values()
