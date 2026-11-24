@@ -9,23 +9,25 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from yaml_extract import extract_key_values
-from i18n_http import post_entry
+from yaml_extract import extract_key_values, write_key_values
+from i18n_http import post_entry, get_entry
 
 # 文件路径
 YAML_PATH = "C:/project/ui_remote_module/locales/zh-CN.yaml"
+YAML_PATH_EN = "C:/project/ui_remote_module/locales/en.yaml"
 # key值头
 YAML_TOP_KEY = "socAlert"
 
 # 平台模块名称
 MODULE_KEY = "secAlert"
 # 平台token
-TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3OTUxNjk1MDksImlhdCI6MTc5NTA1NDMwOSwiaWQiOjIyOH0.UllfInK9DnWKhz7wHJEK_yXxuUDTtt1hcJWlvM-zQT4"
+TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3OTU2MDI1MzcsImlhdCI6MTc5NTQ4NzMzNywiaWQiOjIyOH0.N-Xp9iuKRNntxZjnabRsNUhcwpzRGrysdgjU8zSAdyA"
 # 产品ID
+PRODUCT = "安全云前端"
 PRODUCT_ID = 6
 
 
-def main():
+def write_entry():
     result = extract_key_values(YAML_PATH, YAML_TOP_KEY)
     print(f"Extracted {len(result)} entries from {YAML_PATH}[{YAML_TOP_KEY}]")
     print(f"Posting to glossary with module_key={MODULE_KEY} ...\n")
@@ -50,6 +52,41 @@ def main():
 
     print(f"\nDone.  success={success}  fail={fail}")
 
+def check_entry_en():
+    result = extract_key_values(YAML_PATH_EN, YAML_TOP_KEY)
+    print(f"Extracted {len(result)} entries from {YAML_PATH_EN}[{YAML_TOP_KEY}]")
+    print(f"Module key: {MODULE_KEY}\n")
+
+    diff_updates: dict[str, str] = {}
+
+    for entry_key, content in result.items():
+        try:
+            resp = get_entry(TOKEN, entry_key, module_key=MODULE_KEY, product=PRODUCT)
+            # 比对entry_key 的 content和resp返回的是否一致
+            data = resp.json()
+            items = data.get("data", {}).get("list", [])
+            # 从返回列表中精确匹配 entry_key
+            matched = [it for it in items if it.get("entry_key") == entry_key]
+            if not matched:
+                print(f"[MISS] {entry_key} | YAML content: {content} | (not found in API response)")
+                continue
+            api_content = matched[0].get("en_lang", {}).get("content", "")
+            if content == api_content:
+                print(f"[MATCH] {entry_key} | {content}")
+            else:
+                print(f"[DIFF] {entry_key} | YAML: {content} | API: {api_content}")
+                diff_updates[entry_key] = api_content
+        except Exception as exc:
+            print(f"[ERR] {entry_key} -> {exc}")
+            continue
+
+    if diff_updates:
+        print(f"\nUpdating {len(diff_updates)} key(s) with API values...")
+        # write_key_values(YAML_PATH_EN, diff_updates, YAML_TOP_KEY)
+    else:
+        print("\nAll entries match — nothing to update.")
+
 
 if __name__ == "__main__":
-    main()
+    # write_entry()
+    check_entry_en()
